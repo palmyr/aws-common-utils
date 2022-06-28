@@ -1,0 +1,16 @@
+parameters:
+    aws_profile: '%env(default::string:AWS_PROFILE)%'
+    aws_region: '%env(default::string:AWS_REGION)%'
+
+services:
+
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+
+    Palmyr\App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Application.php'
+            - '../src/ShellCommand'
