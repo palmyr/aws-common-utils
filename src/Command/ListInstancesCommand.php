@@ -3,17 +3,15 @@
 namespace Palmyr\App\Command;
 
 use Palmyr\App\Holder\SdkHolderInterface;
-use Aws\Sdk;
-use Palmyr\App\Service\AwsIniFileServiceInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ListInstancesCommand extends AbstractAWSCommand
 {
 
-    public function __construct(SdkHolderInterface $sdkHolder, AwsIniFileServiceInterface $iniFileService)
+    public function __construct(SdkHolderInterface $sdkHolder)
     {
-        parent::__construct($sdkHolder, $iniFileService, 'ec2:list_instances');
+        parent::__construct($sdkHolder, "ec2:list_instances");
     }
 
     protected function runCommand(InputInterface $input, SymfonyStyle $io): int
@@ -22,22 +20,32 @@ class ListInstancesCommand extends AbstractAWSCommand
 
         $result = $ec2Client->describeInstances();
 
-        $reservations = $result->get('Reservations');
+        $reservations = $result->get("Reservations");
 
         $headers = [
-            'InstanceId',
-            'InstanceType',
+            "InstanceName",
+            "InstanceId",
+            "InstanceType",
             "PublicIpAddress",
+            "PrivateIpAddress",
             "State"
         ];
         $rows = [];
 
         foreach ( $reservations as $reservation ) {
-            if ( isset($reservation['Instances'][0]) && ($instance = $reservation['Instances'][0]) ) {
+            if ( isset($reservation["Instances"][0]) && ($instance = $reservation["Instances"][0]) ) {
+                $name = "";
+                foreach ($instance["Tags"] as $tag) {
+                    if ( $tag["Key"] === "Name" ) {
+                        $name = $tag["Value"];
+                    }
+                }
                 $rows[] = [
-                    $instance['InstanceId'],
-                    $instance['InstanceType'],
+                    $name,
+                    $instance["InstanceId"],
+                    $instance["InstanceType"],
                     $instance["PublicIpAddress"],
+                    $instance["PrivateIpAddress"],
                     $instance["State"]["Name"]
                 ];
             }

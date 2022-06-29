@@ -4,125 +4,132 @@ declare(strict_types=1);
 
 namespace Palmyr\App\Command;
 
-use Aws\Credentials\CredentialProvider;
-use Palmyr\App\Holder\SdkHolderInterface;
+use Palmyr\App\Exception\SdkBuildException;
 use Palmyr\App\Service\AwsIniFileServiceInterface;
 use Aws\Sdk;
 use Aws\Sts\Exception\StsException;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-class MFALoginCommand extends AbstractAWSCommand
+class MFALoginCommand extends AbstractAWSConfigurationCommand
 {
+
+    protected AwsIniFileServiceInterface $iniFileService;
 
     protected PropertyAccessorInterface $propertyAccessor;
 
     public function __construct(
-        SdkHolderInterface $sdkHolder,
         AwsIniFileServiceInterface $iniFileService,
-        string $name = null)
+        PropertyAccessorInterface $propertyAccessor
+    )
     {
-        parent::__construct($sdkHolder, $iniFileService, 'mfa:login');
+        $this->iniFileService = $iniFileService;
+        $this->propertyAccessor = $propertyAccessor;
+        parent::__construct("mfa:login");
     }
 
-    protected function configure()
+    /**
+     * @param InputInterface $input
+     * @return Sdk
+     * @throws SdkBuildException
+     */
+    protected function buildSDK(InputInterface $input): Sdk
     {
-        parent::configure();
-    }
-
-    protected function prepareSDK(InputInterface $input): void
-    {
-
         $profile = (string)$input->getOption("profile");
 
-        $data = $this->iniFileService->parseAwsIni();
+        $data = $this->iniFileService->parseAwsIni(AwsIniFileServiceInterface::AWS_INI_FILENAME_MFA);
 
-        if ( !array_key_exists($profile, $data) ) {
-            throw new \RuntimeException("Failed to find profile");
+        if ( !$this->propertyAccessor->getValue($data, "[{$profile}]") ) {
+            throw new SdkBuildException("Could not find the requested profile.");
         }
-        $profileData = $data[$profile];
 
-        $region = $profileData["region"];
+        $region = $this->propertyAccessor->getValue($data, "[{$profile}][region]");
 
         if ($input->getOption("region")) {
             $region = $input->getOption("region");
         }
 
-        $sdk = new Sdk([
+        return new Sdk([
             "version" => "latest",
             "credentials" => [
-                "key" => $profileData["aws_access_key_id"],
-                "secret" => $profileData["aws_secret_access_key"],
+                "key" => $this->propertyAccessor->getValue($data, "[{$profile}][aws_access_key_id]"),
+                "secret" => $this->propertyAccessor->getValue($data, "[{$profile}][aws_secret_access_key]"),
             ],
             "region" => $region,
         ]);
-
-        $this->sdkHolder->setSdk($sdk);
     }
 
-    protected function runCommand(InputInterface $input, SymfonyStyle $io): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $profile = $input->getOption('profile');
+        $io = new SymfonyStyle($input, $output);
+
+        $profile = (string)$input->getOption("profile");
 
         $data = $this->iniFileService->parseAwsIni();
-        $mfaData = $this->iniFileService->parseAwsIni('credentials_mfa');
+        $mfaData = $this->iniFileService->parseAwsIni("credentials_mfa");
 
-        if (array_key_exists($profile, $mfaData) && isset($mfaData[$profile]['mfa_serial_number'])) {
-            $serialNumber = $mfaData[$profile]['mfa_serial_number'];
-        } else {
-            $io->error('The profile config does not contain a mfa serial number');
+        if (!$serialNumber = $this->propertyAccessor->getValue($mfaData, "[{$profile}][mfa_serial_number]")) {
+            $io->error("The profile config does not contain a mfa serial number");
             return self::INVALID;
         }
 
-        if (isset($data[$profile]) && is_array($data[$profile]) && $profileData = $data[$profile]) {
-            if (isset($profileData['aws_session_token_expiration'])) {
-                $expiration = new \DateTime($profileData['aws_session_token_expiration']);
-                if ($expiration > new \DateTime()) {
-                    $io->success(sprintf('Current token is still valid [Expiration: %s ]', $expiration->format(\DATE_ATOM)));
-                    return self::SUCCESS;
-                }
+        if ($currentTokenExpirationString = (string)$this->propertyAccessor->getValue($data, "[{$profile}][aws_session_token_expiration]")) {
+            $currentTokenExpirationDate = new \DateTimeImmutable($currentTokenExpirationString);
+            if ($currentTokenExpirationDate > new \DateTimeImmutable()) {
+                $io->success(sprintf("Current token is still valid [Expiration: %s ]", $currentTokenExpirationDate->format(\DateTimeInterface::ATOM)));
+                return self::SUCCESS;
             }
         }
 
-        $stsClient = $this->getSdk()->createSts();
+        $region = (string)$this->propertyAccessor->getValue($mfaData, "[{$profile}][region]");
+        if ($input->getOption("region")) {
+            $region = $input->getOption("region");
+        }
+
+        $expirationDate = $this->login($io, $input, $serialNumber, $region, $profile);
+
+        $io->success(sprintf("Successfully logged in, the token will expire at %s.", $expirationDate->format(\DateTimeInterface::ATOM)));
+
+        return self::SUCCESS;
+    }
+
+    protected function login(SymfonyStyle $io, InputInterface $input, string $serialNumber, string $region, string $profile): \DateTimeImmutable
+    {
+        $stsClient = $this->buildSDK($input)->createSts();
 
         $loggedIn = false;
         while (!$loggedIn) {
             try {
                 $result = $stsClient->getSessionToken([
-                    'SerialNumber' => $serialNumber,
-                    'TokenCode' => $io->ask('MFA token'),
+                    "SerialNumber" => $serialNumber,
+                    "TokenCode" => $io->ask("MFA token"),
                 ]);
                 $loggedIn = true;
             } catch (StsException $e) {
-                if ($e->getAwsErrorCode() === 'AccessDenied') {
-                    $io->error('Failed to authenticate');
+                if ($e->getAwsErrorCode() === "AccessDenied") {
+                    $io->error("Failed to authenticate, please retry.");
                 } else {
                     throw $e;
                 }
             }
         }
 
-        $credentials = $result->get('Credentials');
+        $credentials = $result->get("Credentials");
 
-        /** @var \DateTimeInterface $expiration */
-        $expiration = $credentials['Expiration'];
+        $expiration = \DateTimeImmutable::createFromInterface($this->propertyAccessor->getValue($credentials, "[Expiration]"));
 
         $data[$profile] = [
-            'aws_access_key_id' => $credentials['AccessKeyId'],
-            'aws_secret_access_key' => $credentials['SecretAccessKey'],
-            'aws_session_token' => $credentials['SessionToken'],
-            'aws_session_token_expiration' => $expiration->format(\DATE_ATOM),
-            "region" => $this->propertyAccessor->getValue($data, '['.$profile.'][region]'),
+            "aws_access_key_id" => $this->propertyAccessor->getValue($credentials,"[AccessKeyId]"),
+            "aws_secret_access_key" => $this->propertyAccessor->getValue($credentials, "[SecretAccessKey]"),
+            "aws_session_token" => $this->propertyAccessor->getValue($credentials,"[SessionToken]"),
+            "aws_session_token_expiration" => $expiration->format(\DateTimeInterface::ATOM),
+            "region" => $region,
         ];
 
         $this->iniFileService->writeAwsIni($data);
 
-        $io->success(sprintf('Successfully logged in, the token will expire at %s.', $expiration->format(\DateTimeInterface::ATOM)));
-
-        return self::SUCCESS;
+        return $expiration;
     }
 }

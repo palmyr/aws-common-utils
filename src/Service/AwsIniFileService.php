@@ -8,12 +8,12 @@ use Aws\Credentials\CredentialProvider;
 
 class AwsIniFileService implements AwsIniFileServiceInterface
 {
-    public function parseAwsIni(string $filename = 'credentials'): array
+    public function parseAwsIni(string $filename = self::AWS_INI_FILENAME): array
     {
         return \Aws\parse_ini_file($this->getFileName($filename), true, INI_SCANNER_RAW);
     }
 
-    public function writeAwsIni(array $data, string $filename = 'credentials'): void
+    public function writeAwsIni(array $data, string $filename = self::AWS_INI_FILENAME): void
     {
         $file = new  \SplFileObject($this->getFileName($filename), 'w');
 

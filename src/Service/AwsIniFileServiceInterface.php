@@ -6,11 +6,11 @@ namespace Palmyr\App\Service;
 
 interface AwsIniFileServiceInterface
 {
-    public const MFA_SUFFIX = '_mfa';
+    public const AWS_INI_FILENAME = 'credentials';
 
-    public const MFA_SUFFIX_LENGTH = 4;
+    public const AWS_INI_FILENAME_MFA = self::AWS_INI_FILENAME . '_mfa';
 
-    public function parseAwsIni(string $filename = 'credentials'): array;
+    public function parseAwsIni(string $filename = self::AWS_INI_FILENAME): array;
 
-    public function writeAwsIni(array $data, string $filename = 'credentials'): void;
+    public function writeAwsIni(array $data, string $filename = self::AWS_INI_FILENAME_MFA): void;
 }
