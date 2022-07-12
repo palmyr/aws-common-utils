@@ -7,6 +7,7 @@ namespace Palmyr\App\Holder;
 use Aws\Sdk;
 use Palmyr\App\Exception\SdkBuildException;
 use Palmyr\App\Service\AwsIniFileServiceInterface;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
@@ -32,12 +33,16 @@ class SdkHolder implements SdkHolderInterface
             return $this->sdk;
         }
 
-        throw new \RuntimeException('The sdk has not been set yet');
+        throw new RuntimeException('The sdk has not been set yet');
     }
 
     public function buildSdk(InputInterface $input): SdkHolderInterface
     {
         $profile = (string)$input->getOption("profile");
+
+        if ( empty($profile) ) {
+            throw new RuntimeException("The profile option is required");
+        }
 
         $data = $this->iniFileService->parseAwsIni();
 
