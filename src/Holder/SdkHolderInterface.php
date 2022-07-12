@@ -10,7 +10,6 @@ use Symfony\Component\Console\Input\InputInterface;
 
 interface SdkHolderInterface
 {
-
     /**
      * @param InputInterface $input
      * @return SdkHolderInterface

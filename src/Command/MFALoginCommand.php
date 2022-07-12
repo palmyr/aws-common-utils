@@ -15,7 +15,6 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class MFALoginCommand extends AbstractAWSConfigurationCommand
 {
-
     protected AwsIniFileServiceInterface $iniFileService;
 
     protected PropertyAccessorInterface $propertyAccessor;
@@ -23,8 +22,7 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
     public function __construct(
         AwsIniFileServiceInterface $iniFileService,
         PropertyAccessorInterface $propertyAccessor
-    )
-    {
+    ) {
         $this->iniFileService = $iniFileService;
         $this->propertyAccessor = $propertyAccessor;
         parent::__construct("mfa:login");
@@ -41,7 +39,7 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
 
         $data = $this->iniFileService->parseAwsIni(AwsIniFileServiceInterface::AWS_INI_FILENAME_MFA);
 
-        if ( !$this->propertyAccessor->getValue($data, "[{$profile}]") ) {
+        if (!$this->propertyAccessor->getValue($data, "[{$profile}]")) {
             throw new SdkBuildException("Could not find the requested profile.");
         }
 
@@ -121,9 +119,9 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
         $expiration = \DateTimeImmutable::createFromInterface($this->propertyAccessor->getValue($credentials, "[Expiration]"));
 
         $data[$profile] = [
-            "aws_access_key_id" => $this->propertyAccessor->getValue($credentials,"[AccessKeyId]"),
+            "aws_access_key_id" => $this->propertyAccessor->getValue($credentials, "[AccessKeyId]"),
             "aws_secret_access_key" => $this->propertyAccessor->getValue($credentials, "[SecretAccessKey]"),
-            "aws_session_token" => $this->propertyAccessor->getValue($credentials,"[SessionToken]"),
+            "aws_session_token" => $this->propertyAccessor->getValue($credentials, "[SessionToken]"),
             "aws_session_token_expiration" => $expiration->format(\DateTimeInterface::ATOM),
             "region" => $region,
         ];

@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Palmyr\App;
 
-use Palmyr\Console\Application AS BaseApplication;
+use Palmyr\Console\Application as BaseApplication;
 
 class Application extends BaseApplication
 {
-
 }

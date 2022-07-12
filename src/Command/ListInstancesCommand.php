@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Palmyr\App\Command;
 
@@ -8,7 +10,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ListInstancesCommand extends AbstractAWSCommand
 {
-
     public function __construct(SdkHolderInterface $sdkHolder)
     {
         parent::__construct($sdkHolder, "ec2:list_instances");
@@ -32,11 +33,11 @@ class ListInstancesCommand extends AbstractAWSCommand
         ];
         $rows = [];
 
-        foreach ( $reservations as $reservation ) {
-            if ( isset($reservation["Instances"][0]) && ($instance = $reservation["Instances"][0]) ) {
+        foreach ($reservations as $reservation) {
+            if (isset($reservation["Instances"][0]) && ($instance = $reservation["Instances"][0])) {
                 $name = "";
                 foreach ($instance["Tags"] as $tag) {
-                    if ( $tag["Key"] === "Name" ) {
+                    if ($tag["Key"] === "Name") {
                         $name = $tag["Value"];
                     }
                 }

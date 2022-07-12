@@ -12,7 +12,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 abstract class AbstractAWSCommand extends AbstractAWSConfigurationCommand
 {
-
     private SdkHolderInterface $sdkHolder;
 
     public function __construct(

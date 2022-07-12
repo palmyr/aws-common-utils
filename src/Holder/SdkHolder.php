@@ -21,8 +21,7 @@ class SdkHolder implements SdkHolderInterface
     public function __construct(
         AwsIniFileServiceInterface $iniFileService,
         PropertyAccessorInterface $propertyAccessor
-    )
-    {
+    ) {
         $this->iniFileService = $iniFileService;
         $this->propertyAccessor = $propertyAccessor;
     }
@@ -42,7 +41,7 @@ class SdkHolder implements SdkHolderInterface
 
         $data = $this->iniFileService->parseAwsIni();
 
-        if ( !$profileData = $this->propertyAccessor->getValue($data, "[{$profile}]") ) {
+        if (!$profileData = $this->propertyAccessor->getValue($data, "[{$profile}]")) {
             throw new SdkBuildException("Could not find the requested profile.");
         }
 

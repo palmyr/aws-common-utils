@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cd9ac6574fd9861bbc4a50ee311b4432",
+    "content-hash": "a32a653ad22305a12d8226620636115f",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -58,16 +58,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.228.5",
+            "version": "3.231.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "8b6e626e02c42310c3ce8615acc7b2c992e48c97"
+                "reference": "f52b74060063d6545ee8324f1d161f37fcb87c8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/8b6e626e02c42310c3ce8615acc7b2c992e48c97",
-                "reference": "8b6e626e02c42310c3ce8615acc7b2c992e48c97",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/f52b74060063d6545ee8324f1d161f37fcb87c8c",
+                "reference": "f52b74060063d6545ee8324f1d161f37fcb87c8c",
                 "shasum": ""
             },
             "require": {
@@ -85,6 +85,7 @@
                 "andrewsville/php-token-reflection": "^1.4",
                 "aws/aws-php-sns-message-validator": "~1.0",
                 "behat/behat": "~3.0",
+                "composer/composer": "^1.10.22",
                 "doctrine/cache": "~1.4",
                 "ext-dom": "*",
                 "ext-openssl": "*",
@@ -143,9 +144,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.228.5"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.231.3"
             },
-            "time": "2022-06-28T18:13:37+00:00"
+            "time": "2022-07-11T18:20:19+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -681,16 +682,16 @@
         },
         {
             "name": "palmyr/console",
-            "version": "1.0.3",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/palmyr/console.git",
-                "reference": "4cb31b1066bff9ce631bb59c5b69d802a7ba068e"
+                "reference": "88e76c09e5506eef666bbab6ab1d2c89697b1a09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/palmyr/console/zipball/4cb31b1066bff9ce631bb59c5b69d802a7ba068e",
-                "reference": "4cb31b1066bff9ce631bb59c5b69d802a7ba068e",
+                "url": "https://api.github.com/repos/palmyr/console/zipball/88e76c09e5506eef666bbab6ab1d2c89697b1a09",
+                "reference": "88e76c09e5506eef666bbab6ab1d2c89697b1a09",
                 "shasum": ""
             },
             "require": {
@@ -721,9 +722,9 @@
             "description": "Base symfony console",
             "support": {
                 "issues": "https://github.com/palmyr/console/issues",
-                "source": "https://github.com/palmyr/console/tree/1.0.3"
+                "source": "https://github.com/palmyr/console/tree/1.1.0"
             },
-            "time": "2022-06-28T16:45:26+00:00"
+            "time": "2022-07-12T16:16:41+00:00"
         },
         {
             "name": "palmyr/php-coding-standards",
