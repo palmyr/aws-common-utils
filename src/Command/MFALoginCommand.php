@@ -86,14 +86,16 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
             $region = $input->getOption("region");
         }
 
-        $expirationDate = $this->login($io, $input, $serialNumber, $region, $profile);
+        $data[$profile] = $profileData = $this->login($io, $input, $serialNumber, $region, $profile);
 
-        $io->success(sprintf("Successfully logged in, the token will expire at %s.", $expirationDate->format(\DateTimeInterface::ATOM)));
+        $this->iniFileService->writeAwsIni($data);
+
+        $io->success(sprintf("Successfully logged in, the token will expire at %s.", $profileData["aws_session_token_expiration"]));
 
         return self::SUCCESS;
     }
 
-    protected function login(SymfonyStyle $io, InputInterface $input, string $serialNumber, string $region, string $profile): \DateTimeImmutable
+    protected function login(SymfonyStyle $io, InputInterface $input, string $serialNumber, string $region, string $profile): array
     {
         $stsClient = $this->buildSDK($input)->createSts();
 
@@ -102,7 +104,7 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
             try {
                 $result = $stsClient->getSessionToken([
                     "SerialNumber" => $serialNumber,
-                    "TokenCode" => $io->ask("MFA token"),
+                    "TokenCode" => $io->ask("MFA token")
                 ]);
                 $loggedIn = true;
             } catch (StsException $e) {
@@ -118,16 +120,12 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
 
         $expiration = \DateTimeImmutable::createFromInterface($this->propertyAccessor->getValue($credentials, "[Expiration]"));
 
-        $data[$profile] = [
+        return [
             "aws_access_key_id" => $this->propertyAccessor->getValue($credentials, "[AccessKeyId]"),
             "aws_secret_access_key" => $this->propertyAccessor->getValue($credentials, "[SecretAccessKey]"),
             "aws_session_token" => $this->propertyAccessor->getValue($credentials, "[SessionToken]"),
             "aws_session_token_expiration" => $expiration->format(\DateTimeInterface::ATOM),
             "region" => $region,
         ];
-
-        $this->iniFileService->writeAwsIni($data);
-
-        return $expiration;
     }
 }
