@@ -22,7 +22,9 @@ class AutoScalingGroupIPCommand extends AbstractInstanceIPCommand
     protected function configure()
     {
         parent::configure();
-        $this->addOption('key', 'k', InputOption::VALUE_OPTIONAL, 'Which instance key to use', 0)
+        $this
+            ->setDescription("Get a instances ip from an autoscaling group.")
+            ->addOption('key', 'k', InputOption::VALUE_OPTIONAL, 'Which instance key to use', 0)
             ->addOption('auto_scaling_group_name', 'g', InputOption::VALUE_OPTIONAL, 'The autoscaling group name to connect to');
     }
 

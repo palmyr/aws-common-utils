@@ -8,4 +8,5 @@ use Palmyr\Console\Application as BaseApplication;
 
 class Application extends BaseApplication
 {
+
 }

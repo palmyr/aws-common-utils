@@ -25,6 +25,7 @@ class InstanceIPCommand extends AbstractInstanceIPCommand
     protected function configure()
     {
         parent::configure();
+        $this->setDescription("get the instances ip address by its id");
         $this->addOption("instance_id", "i", InputOption::VALUE_OPTIONAL, "The instance id");
     }
 

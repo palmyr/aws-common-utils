@@ -15,6 +15,12 @@ class ListInstancesCommand extends AbstractAWSCommand
         parent::__construct($sdkHolder, "ec2:list_instances");
     }
 
+    protected function configure()
+    {
+        parent::configure();
+        $this->setDescription("List all instances");
+    }
+
     protected function runCommand(InputInterface $input, SymfonyStyle $io): int
     {
         $ec2Client = $this->getSdk()->createEc2();

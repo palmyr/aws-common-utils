@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Palmyr\App\Command;
 
+use Palmyr\App\Holder\SdkHolderInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class GetCallerIdentityCommand extends AbstractAWSCommand
 {
+
+    public function __construct(SdkHolderInterface $sdkHolder)
+    {
+        parent::__construct($sdkHolder, "sts:get_caller_identity");
+    }
+
     protected function configure()
     {
         parent::configure();
-        $this->setName("sts:get_caller_identity");
+        $this->setDescription("Get the current users account details");
     }
     protected function runCommand(InputInterface $input, SymfonyStyle $io): int
     {

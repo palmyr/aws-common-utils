@@ -28,6 +28,13 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
         parent::__construct("mfa:login");
     }
 
+    protected function configure()
+    {
+        parent::configure();
+
+        $this->setDescription("Generate credentials using mfa");
+    }
+
     /**
      * @param InputInterface $input
      * @return Sdk
