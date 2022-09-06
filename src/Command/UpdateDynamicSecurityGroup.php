@@ -112,7 +112,7 @@ class UpdateDynamicSecurityGroup extends AbstractAWSCommand
     {
         $cidrCollection = [];
         foreach ( $existingRule["IpRanges"] as $ipRange ) {
-            if ( $ipRange["Description"] !== $description ) {
+            if ( isset($ipRange["Description"]) && $ipRange["Description"] !== $description ) {
                 $cidrCollection[] = $ipRange["CidrIp"];
             }
         }
