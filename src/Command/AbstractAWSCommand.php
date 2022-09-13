@@ -22,7 +22,7 @@ abstract class AbstractAWSCommand extends AbstractAWSConfigurationCommand
         parent::__construct($name);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->sdkHolder->buildSdk($input);
         $io = $this->prepareIO($input, $output);

@@ -28,7 +28,7 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
         parent::__construct("mfa:login");
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -66,7 +66,7 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
         ]);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
