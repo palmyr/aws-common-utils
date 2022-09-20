@@ -9,7 +9,7 @@
     "ext-ctype": "*",
     "ext-iconv": "*",
     "aws/aws-sdk-php": "^3.204",
-    "palmyr/commonutils": "^1.0",
+    "palmyr/commonutils": "^2.0",
     "palmyr/php-coding-standards": "^1.0",
     "palmyr/console": "^1.0"
   },
