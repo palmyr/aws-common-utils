@@ -5,12 +5,27 @@ declare(strict_types=1);
 namespace Palmyr\App\Service;
 
 use Aws\Credentials\CredentialProvider;
+use Palmyr\App\Model\AwsIniModel;
+use Palmyr\App\Model\AwsIniModelInterface;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class AwsIniFileService implements AwsIniFileServiceInterface
 {
-    public function parseAwsIni(string $filename = self::AWS_INI_FILENAME): array
+
+    protected PropertyAccessorInterface $propertyAccessor;
+
+    public function __construct(
+        PropertyAccessorInterface $propertyAccessor
+    )
     {
-        return \Aws\parse_ini_file($this->getFileName($filename), true, INI_SCANNER_RAW);
+        $this->propertyAccessor = $propertyAccessor;
+    }
+
+    public function parseAwsIni(string $filename = self::AWS_INI_FILENAME): AwsIniModelInterface
+    {
+        $data =  \Aws\parse_ini_file($this->getFileName($filename), true, INI_SCANNER_RAW);
+
+        return new AwsIniModel($data);
     }
 
     public function writeAwsIni(array $data, string $filename = self::AWS_INI_FILENAME): void
