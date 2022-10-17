@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Palmyr\App\Holder;
 
+use Aws\AwsClientInterface;
 use Aws\Sdk;
+use Palmyr\App\Enum\ErrorMessages;
 use Palmyr\App\Exception\SdkBuildException;
+use Palmyr\App\Factory\SdkFactoryInterface;
 use Palmyr\App\Service\AwsIniFileServiceInterface;
 use Symfony\Component\Console\Exception\RuntimeException;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class SdkHolder implements SdkHolderInterface
@@ -17,14 +19,14 @@ class SdkHolder implements SdkHolderInterface
 
     protected AwsIniFileServiceInterface $iniFileService;
 
-    protected PropertyAccessorInterface $propertyAccessor;
+    protected SdkFactoryInterface $sdkFactory;
 
     public function __construct(
         AwsIniFileServiceInterface $iniFileService,
-        PropertyAccessorInterface $propertyAccessor
+        SdkFactoryInterface $sdkFactory,
     ) {
         $this->iniFileService = $iniFileService;
-        $this->propertyAccessor = $propertyAccessor;
+        $this->sdkFactory = $sdkFactory;
     }
 
     public function getSdk(): Sdk
@@ -36,27 +38,19 @@ class SdkHolder implements SdkHolderInterface
         throw new RuntimeException('The sdk has not been set yet');
     }
 
-    public function buildSdk(InputInterface $input): SdkHolderInterface
+    public function buildSdk(string $profile, string $region = null): SdkHolderInterface
     {
-        $profile = (string)$input->getOption("profile");
-
-        if ( empty($profile) ) {
-            throw new RuntimeException("The profile option is required");
-        }
-
         $data = $this->iniFileService->parseAwsIni();
 
-        if (!$profileData = $this->propertyAccessor->getValue($data, "[{$profile}]")) {
-            throw new SdkBuildException("Could not find the requested profile.");
+        if (!$profileData = $data->getProfile($profile)) {
+            throw new SdkBuildException(ErrorMessages::PROFILE_NOT_FOUND);
         }
 
-        $region = $this->propertyAccessor->getValue($profileData, "[region]");
-        if ($input->getOption("region")) {
-            $region = $input->getOption("region");
+        if (is_null($region)) {
+            $region = $profileData->get("region");
         }
 
-        $this->sdk = new Sdk([
-            "version" => "latest",
+        $this->sdk = $this->sdkFactory->build([
             "profile" => $profile,
             "region" => $region,
         ]);

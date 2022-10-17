@@ -12,7 +12,7 @@ abstract class AbstractAWSConfigurationCommand extends Command
     protected function configure()
     {
         parent::configure();
-        $this->addOption("profile", "p", InputOption::VALUE_REQUIRED, "The profile to use.");
+        $this->addOption("profile", "p", InputOption::VALUE_REQUIRED, "The profile to use.", "default");
         $this->addOption("region", "r", InputOption::VALUE_OPTIONAL, "The region to use.");
     }
 }

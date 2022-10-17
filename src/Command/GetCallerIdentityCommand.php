@@ -10,7 +10,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class GetCallerIdentityCommand extends AbstractAWSCommand
 {
-
     public function __construct(SdkHolderInterface $sdkHolder)
     {
         parent::__construct($sdkHolder, "sts:get_caller_identity");
@@ -19,7 +18,7 @@ class GetCallerIdentityCommand extends AbstractAWSCommand
     protected function configure()
     {
         parent::configure();
-        $this->setDescription("Get the current users account details");
+        $this->setDescription("Get account details from the current users session.");
     }
     protected function runCommand(InputInterface $input, SymfonyStyle $io): int
     {

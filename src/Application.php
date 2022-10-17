@@ -11,6 +11,10 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 class Application extends BaseApplication
 {
+    protected function __construct()
+    {
+        parent::__construct("aws-common-utils", "1.3.3");
+    }
 
     protected function loadExtras(ContainerBuilder $containerBuilder): void
     {

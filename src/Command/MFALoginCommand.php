@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Palmyr\App\Command;
 
 use Aws\Sts\StsClient;
-use Palmyr\App\Exception\SdkBuildException;
 use Palmyr\App\Model\AwsProfileModel;
 use Palmyr\App\Model\AwsProfileModelInterface;
 use Palmyr\App\Service\AwsIniFileServiceInterface;
@@ -46,8 +45,8 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
 
         $data = $this->iniFileService->parseAwsIni(AwsIniFileServiceInterface::AWS_INI_FILENAME_MFA);
 
-        if ( !$profileData = $data->getProfile($profile) ) {
-            $io->error("The requested profile was not found.");
+        if (!$profileData = $data->getProfile($profile)) {
+            $io->error(ErrorMessages::PROFILE_NOT_FOUND);
             return self::INVALID;
         }
 
@@ -83,12 +82,13 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
 
     protected function login(StsClient $stsClient, AwsProfileModelInterface $profileData, SymfonyStyle $io): \DateTimeImmutable
     {
-        $data = $this->iniFileService->parseAwsIni( AwsIniFileServiceInterface::AWS_INI_FILENAME);
+        $data = $this->iniFileService->parseAwsIni(AwsIniFileServiceInterface::AWS_INI_FILENAME);
 
-        if (  ($previousProfileData = $data->getProfile($profileData->getProfile())) && $previousProfileData->sessionIsValid() ) {
+        if (($previousProfileData = $data->getProfile($profileData->getProfile())) && $previousProfileData->sessionIsValid()) {
             return new \DateTimeImmutable($previousProfileData->get("aws_session_token_expiration"));
         }
 
+        $result = null;
         $loggedIn = false;
         while (!$loggedIn) {
             $token = $io->ask("MFA token");

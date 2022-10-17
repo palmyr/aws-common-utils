@@ -11,13 +11,11 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class AwsIniFileService implements AwsIniFileServiceInterface
 {
-
     protected PropertyAccessorInterface $propertyAccessor;
 
     public function __construct(
         PropertyAccessorInterface $propertyAccessor
-    )
-    {
+    ) {
         $this->propertyAccessor = $propertyAccessor;
     }
 

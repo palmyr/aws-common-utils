@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Palmyr\App\Model;
 
@@ -6,7 +8,6 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class AwsProfileModel implements AwsProfileModelInterface
 {
-
     protected string $profile;
 
     protected array $data;
@@ -14,8 +15,7 @@ class AwsProfileModel implements AwsProfileModelInterface
     public function __construct(
         string $profile,
         array $data
-    )
-    {
+    ) {
         $this->profile = $profile;
         $this->data = $data;
     }
@@ -30,7 +30,7 @@ class AwsProfileModel implements AwsProfileModelInterface
 
     public function get(string $key): ?string
     {
-        if ( array_key_exists($key, $this->data) ) {
+        if (array_key_exists($key, $this->data)) {
             return (string)$this->data[$key];
         }
 
