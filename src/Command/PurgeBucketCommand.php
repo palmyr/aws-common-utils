@@ -11,6 +11,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class PurgeBucketCommand extends AbstractAWSCommand
 {
 
+    protected const ZERO_ITEMS = 0;
+
     protected S3ManagerInterface $s3Manager;
 
     public function __construct(
@@ -38,6 +40,19 @@ class PurgeBucketCommand extends AbstractAWSCommand
             $this->io->warning("The bucket does not exist");
             return self::FAILURE;
         }
+
+        $summary = $this->s3Manager->getBucketSummary($bucketName);
+
+        if ( $summary->getCount() > self::ZERO_ITEMS ) {
+            $io->warning("The bucket is not empty [Count: {$summary->getCount()} ] [Size: {$summary->getSize()} ]");
+            if (!$io->confirm("Purge", false)) {
+                return self::SUCCESS;
+            }
+        }
+
+        $this->s3Manager->purgeBucket($bucketName, true);
+
+
 
         return self::SUCCESS;
     }

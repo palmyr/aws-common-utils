@@ -14,6 +14,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use Palmyr\App\Enum\ErrorMessages;
 
 class MFALoginCommand extends AbstractAWSConfigurationCommand
 {
@@ -46,7 +47,7 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
         $data = $this->iniFileService->parseAwsIni(AwsIniFileServiceInterface::AWS_INI_FILENAME_MFA);
 
         if (!$profileData = $data->getProfile($profile)) {
-            $io->error(ErrorMessages::PROFILE_NOT_FOUND);
+            $io->error("The profile [{$profile}] could not be found");
             return self::INVALID;
         }
 
