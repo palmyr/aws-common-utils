@@ -49,11 +49,11 @@ class ListInstancesCommand extends AbstractAWSCommand
                 }
                 $rows[] = [
                     $name,
-                    $instance["InstanceId"],
-                    $instance["InstanceType"],
-                    $instance["PublicIpAddress"],
-                    $instance["PrivateIpAddress"],
-                    $instance["State"]["Name"]
+                    $instance["InstanceId"] ?: null,
+                    $instance["InstanceType"] ?: null,
+                    $instance["PublicIpAddress"] ?: null,
+                    $instance["PrivateIpAddress"] ?: null,
+                    $instance["State"]["Name"] ?: null
                 ];
             }
         }
