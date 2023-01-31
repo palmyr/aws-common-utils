@@ -7,11 +7,27 @@ namespace Palmyr\App\Command;
 use Palmyr\App\Holder\SdkHolderInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class ListInstancesCommand extends AbstractAWSCommand
 {
-    public function __construct(SdkHolderInterface $sdkHolder)
+
+    protected const INSTANCE_KEYS = [
+        "[InstanceId]",
+        "[InstanceType]",
+        "[PublicIpAddress]",
+        "[PrivateIpAddress]",
+        "[State][Name]",
+    ];
+
+    protected PropertyAccessorInterface $propertyAccessor;
+
+    public function __construct(
+        SdkHolderInterface $sdkHolder,
+        PropertyAccessorInterface $propertyAccessor
+    )
     {
+        $this->propertyAccessor = $propertyAccessor;
         parent::__construct($sdkHolder, "ec2:list_instances");
     }
 
@@ -47,14 +63,13 @@ class ListInstancesCommand extends AbstractAWSCommand
                         $name = $tag["Value"];
                     }
                 }
-                $rows[] = [
-                    $name,
-                    $instance["InstanceId"] ?: null,
-                    $instance["InstanceType"] ?: null,
-                    $instance["PublicIpAddress"] ?: null,
-                    $instance["PrivateIpAddress"] ?: null,
-                    $instance["State"]["Name"] ?: null
+                $row = [
+                    $name
                 ];
+                foreach (self::INSTANCE_KEYS as $key) {
+                    $row[] = $this->propertyAccessor->getValue($instance, $key);
+                }
+                $rows[] = $row;
             }
         }
 
