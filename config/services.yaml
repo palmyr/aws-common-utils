@@ -2,6 +2,9 @@ parameters:
     aws_profile: '%env(default::string:AWS_PROFILE)%'
     aws_region: '%env(default::string:AWS_REGION)%'
 
+symfony_aws:
+    sdk: ~
+
 services:
 
     _defaults:
@@ -14,3 +17,9 @@ services:
         exclude:
             - '../src/Application.php'
             - '../src/ShellCommand'
+
+    property_accessor:
+        class: Symfony\Component\PropertyAccess\PropertyAccess
+        factory:
+            - Symfony\Component\PropertyAccess\PropertyAccess
+            - createPropertyAccessor

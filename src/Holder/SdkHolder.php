@@ -8,10 +8,9 @@ use Aws\AwsClientInterface;
 use Aws\Sdk;
 use Palmyr\App\Enum\ErrorMessages;
 use Palmyr\App\Exception\SdkBuildException;
-use Palmyr\App\Factory\SdkFactoryInterface;
 use Palmyr\App\Service\AwsIniFileServiceInterface;
+use Palmyr\SymfonyAws\Factory\SdkFactoryInterface;
 use Symfony\Component\Console\Exception\RuntimeException;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class SdkHolder implements SdkHolderInterface
 {
@@ -31,30 +30,11 @@ class SdkHolder implements SdkHolderInterface
 
     public function getSdk(): Sdk
     {
-        if (isset($this->sdk)) {
-            return $this->sdk;
+        if (!isset($this->sdk)) {
+
+            $this->sdk = $this->sdkFactory->build([]);
         }
 
-        throw new RuntimeException('The sdk has not been set yet');
-    }
-
-    public function buildSdk(string $profile, string $region = null): SdkHolderInterface
-    {
-        $data = $this->iniFileService->parseAwsIni();
-
-        if (!$profileData = $data->getProfile($profile)) {
-            throw new SdkBuildException(ErrorMessages::PROFILE_NOT_FOUND);
-        }
-
-        if (is_null($region)) {
-            $region = $profileData->get("region");
-        }
-
-        $this->sdk = $this->sdkFactory->build([
-            "profile" => $profile,
-            "region" => $region,
-        ]);
-
-        return $this;
+        return $this->sdk;
     }
 }
