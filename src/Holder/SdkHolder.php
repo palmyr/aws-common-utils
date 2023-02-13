@@ -27,8 +27,7 @@ class SdkHolder implements SdkHolderInterface
     public function getSdk(): Sdk
     {
         if (!isset($this->sdk)) {
-
-            $this->sdk = $this->sdkFactory->build([]);
+            $this->sdk = $this->sdkFactory->buildFromProfile();
         }
 
         return $this->sdk;
