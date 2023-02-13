@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Palmyr\App\Holder;
 
-use Aws\AwsClientInterface;
 use Aws\Sdk;
-use Palmyr\App\Enum\ErrorMessages;
-use Palmyr\App\Exception\SdkBuildException;
-use Palmyr\App\Service\AwsIniFileServiceInterface;
+use Palmyr\SymfonyAws\Service\AwsIniFileServiceInterface;
 use Palmyr\SymfonyAws\Factory\SdkFactoryInterface;
-use Symfony\Component\Console\Exception\RuntimeException;
 
 class SdkHolder implements SdkHolderInterface
 {

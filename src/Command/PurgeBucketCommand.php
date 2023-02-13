@@ -4,6 +4,7 @@ namespace Palmyr\App\Command;
 
 use Palmyr\App\Holder\SdkHolderInterface;
 use Palmyr\App\Manager\S3ManagerInterface;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -14,12 +15,13 @@ class PurgeBucketCommand extends AbstractAWSCommand
     protected S3ManagerInterface $s3Manager;
 
     public function __construct(
+        ContainerInterface $container,
         SdkHolderInterface $sdkHolder,
         S3ManagerInterface $s3Manager
     )
     {
         $this->s3Manager = $s3Manager;
-        parent::__construct($sdkHolder, "s3:purge_bucket");
+        parent::__construct($container, $sdkHolder, "s3:purge_bucket");
     }
 
     protected function configure()

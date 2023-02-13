@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Palmyr\App\Command;
 
 use Palmyr\App\Holder\SdkHolderInterface;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Palmyr\App\Service\InstanceIpServiceInterface;
 
-class AutoScalingGroupIPCommand extends AbstractInstanceIPCommand
+class AutoScalingGroupIpCommand extends AbstractInstanceIPCommand
 {
     public function __construct(
+        ContainerInterface $container,
         SdkHolderInterface $sdkHolder,
         InstanceIpServiceInterface $instanceIpService
     ) {
-        parent::__construct($sdkHolder, $instanceIpService, 'ec2:autoscaling_group_ip');
+        parent::__construct($container, $sdkHolder, $instanceIpService, 'ec2:autoscaling_group_ip');
     }
 
     protected function configure()

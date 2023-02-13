@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Palmyr\App\Command;
 
-use Aws\Sts\StsClient;
-use Palmyr\App\Model\AwsProfileModel;
-use Palmyr\App\Model\AwsProfileModelInterface;
-use Palmyr\App\Service\AwsIniFileServiceInterface;
-use Aws\Sdk;
+use Palmyr\SymfonyAws\Model\AwsProfileModel;
+use Palmyr\SymfonyAws\Model\AwsProfileModelInterface;
+use Palmyr\SymfonyAws\Factory\SdkFactoryInterface;
+use Palmyr\SymfonyAws\Service\AwsIniFileServiceInterface;
 use Aws\Sts\Exception\StsException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -17,15 +16,22 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class MFALoginCommand extends AbstractAWSConfigurationCommand
 {
+
+    public const AWS_INI_FILENAME_MFA = AwsIniFileServiceInterface::AWS_INI_FILENAME . '_mfa';
+
     protected AwsIniFileServiceInterface $iniFileService;
+
+    protected SdkFactoryInterface $sdkFactory;
 
     protected PropertyAccessorInterface $propertyAccessor;
 
     public function __construct(
         AwsIniFileServiceInterface $iniFileService,
+        SdkFactoryInterface $sdkFactory,
         PropertyAccessorInterface $propertyAccessor
     ) {
         $this->iniFileService = $iniFileService;
+        $this->sdkFactory = $sdkFactory;
         $this->propertyAccessor = $propertyAccessor;
         parent::__construct("mfa:login");
     }
@@ -33,7 +39,6 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
     protected function configure(): void
     {
         parent::configure();
-
         $this->setDescription("Generate credentials using mfa");
     }
 
@@ -41,52 +46,51 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
     {
         $io = new SymfonyStyle($input, $output);
 
-        $profile = (string)$input->getOption("profile");
-
-        $data = $this->iniFileService->parseAwsIni(AwsIniFileServiceInterface::AWS_INI_FILENAME_MFA);
-
-        if (!$profileData = $data->getProfile($profile)) {
-            $io->error(ErrorMessages::PROFILE_NOT_FOUND);
+        if (!$mfaProfile = $this->iniFileService->loadProfile((string)$input->getOption("profile"), self::AWS_INI_FILENAME_MFA)) {
+            $io->error("Profile not found.");
             return self::INVALID;
         }
 
-        $stsClient = $this->buildSDK($profileData)->createSts();
-
-        if (!$profileData->get("mfa_serial_number")) {
+        if (!$mfaProfile->get("mfa_serial_number")) {
             $io->error("The profile config does not contain a mfa serial number");
             return self::INVALID;
         }
 
-        $expiresAt = $this->login($stsClient, $profileData, $io);
+        $profile = $this->verifyLogin($mfaProfile, $io);
 
-        $io->success(sprintf("Successfully logged in, the token will expire at %s.", $expiresAt->format(\DATE_ATOM)));
+        $io->success(sprintf("Successfully logged in, the token will expire at %s.", $profile->getSessionTokenExpiresAt()->format(\DATE_ATOM)));
 
         return self::SUCCESS;
     }
 
-    /**
-     * @param AwsProfileModelInterface $profileData
-     * @return Sdk
-     */
-    protected function buildSDK(AwsProfileModelInterface $profileData): Sdk
+    protected function verifyLogin(AwsProfileModelInterface $mfaProfile, SymfonyStyle $io): AwsProfileModelInterface
     {
-        return new Sdk([
-            "version" => "latest",
-            "credentials" => [
-                "key" => $profileData->get("aws_access_key_id"),
-                "secret" => $profileData->get("aws_secret_access_key"),
-            ],
-            "region" => $profileData->get("region"),
-        ]);
+        if ( !$profile = $this->iniFileService->loadProfile($mfaProfile->getProfile()) ) {
+            $profile = $this->login($mfaProfile, $io);
+            $this->iniFileService->saveProfile($profile);
+            return $profile;
+        }
+
+        if ( $this->sessionIsValid($profile) ) {
+            return $profile;
+        }
+
+        return $this->login($mfaProfile, $io);
+
     }
 
-    protected function login(StsClient $stsClient, AwsProfileModelInterface $profileData, SymfonyStyle $io): \DateTimeImmutable
+    protected function login(AwsProfileModelInterface $mfaProfile, SymfonyStyle $io): AwsProfileModelInterface
     {
-        $data = $this->iniFileService->parseAwsIni(AwsIniFileServiceInterface::AWS_INI_FILENAME);
 
-        if (($previousProfileData = $data->getProfile($profileData->getProfile())) && $previousProfileData->sessionIsValid()) {
-            return new \DateTimeImmutable($previousProfileData->get("aws_session_token_expiration"));
-        }
+        $options = [
+            "credentials" => [
+                "key" => $mfaProfile->get("aws_access_key_id"),
+                "secret" => $mfaProfile->get("aws_secret_access_key"),
+            ],
+            "region" => $mfaProfile->getRegion(),
+        ];
+
+        $stsClient = $this->sdkFactory->build($options)->createSts();
 
         $result = null;
         $loggedIn = false;
@@ -94,13 +98,13 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
             $token = $io->ask("MFA token");
             try {
                 $result = $stsClient->getSessionToken([
-                    "SerialNumber" => $profileData->get("mfa_serial_number"),
+                    "SerialNumber" => $mfaProfile->get("mfa_serial_number"),
                     "TokenCode" => $token,
                 ]);
                 $loggedIn = true;
             } catch (StsException $e) {
                 if ($e->getAwsErrorCode() === "AccessDenied") {
-                    $io->error("Failed to authenticate, please retry.");
+                    $io->error("Failed to authenticate, please retry. " . $e->getAwsErrorMessage());
                 } else {
                     throw $e;
                 }
@@ -111,18 +115,29 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
 
         $expiresAt = \DateTimeImmutable::createFromInterface($this->propertyAccessor->getValue($credentials, "[Expiration]"));
 
-        $temporaryProfileData = new AwsProfileModel($profileData->getProfile(), [
+        $region = $this->sdkFactory->getRegion() ?? $mfaProfile->getRegion();
+
+        $profile = new AwsProfileModel($mfaProfile->getProfile(), [
             "aws_access_key_id" => $this->propertyAccessor->getValue($credentials, "[AccessKeyId]"),
             "aws_secret_access_key" => $this->propertyAccessor->getValue($credentials, "[SecretAccessKey]"),
             "aws_session_token" => $this->propertyAccessor->getValue($credentials, "[SessionToken]"),
             "aws_session_token_expiration" => $expiresAt->format(\DateTimeInterface::ATOM),
-            "region" => $profileData->get("region"),
+            "region" => $region,
         ]);
 
-        $data->setProfile($temporaryProfileData);
+        $this->iniFileService->saveProfile($profile, AwsIniFileServiceInterface::AWS_INI_FILENAME);
 
-        $this->iniFileService->writeAwsIni($data->getData(), AwsIniFileServiceInterface::AWS_INI_FILENAME);
+        return $profile;
+    }
 
-        return $expiresAt;
+    protected function sessionIsValid(AwsProfileModelInterface $profile): bool
+    {
+        if ($expiresAt = $profile->getSessionTokenExpiresAt()) {
+            if ($expiresAt > new \DateTimeImmutable()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

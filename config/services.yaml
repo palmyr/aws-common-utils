@@ -3,7 +3,8 @@ parameters:
     aws_region: '%env(default::string:AWS_REGION)%'
 
 symfony_aws:
-    sdk: ~
+    sdk:
+        version: "latest"
 
 services:
 

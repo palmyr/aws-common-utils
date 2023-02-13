@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Palmyr\App\Command;
 
+
 use Palmyr\App\Holder\SdkHolderInterface;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-class ListInstancesCommand extends AbstractAWSCommand
+class ListInstancesCommand extends AbstractAwsCommand
 {
 
     protected const INSTANCE_KEYS = [
@@ -23,12 +26,13 @@ class ListInstancesCommand extends AbstractAWSCommand
     protected PropertyAccessorInterface $propertyAccessor;
 
     public function __construct(
+        ContainerInterface $container,
         SdkHolderInterface $sdkHolder,
         PropertyAccessorInterface $propertyAccessor
     )
     {
         $this->propertyAccessor = $propertyAccessor;
-        parent::__construct($sdkHolder, "ec2:list_instances");
+        parent::__construct($container, $sdkHolder, "ec2:list_instances");
     }
 
     protected function configure()
@@ -37,8 +41,10 @@ class ListInstancesCommand extends AbstractAWSCommand
         $this->setDescription("List all instances");
     }
 
-    protected function runCommand(InputInterface $input, SymfonyStyle $io): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $io = new SymfonyStyle($input, $output);
+
         $ec2Client = $this->getSdk()->createEc2();
 
         $result = $ec2Client->describeInstances();

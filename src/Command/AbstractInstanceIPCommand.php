@@ -7,6 +7,7 @@ namespace Palmyr\App\Command;
 use Aws\Sdk;
 use Palmyr\App\Holder\SdkHolderInterface;
 use Palmyr\App\Service\InstanceIpServiceInterface;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -16,11 +17,12 @@ abstract class AbstractInstanceIPCommand extends AbstractAWSCommand
     protected InstanceIpServiceInterface $instanceIpService;
 
     public function __construct(
+        ContainerInterface $container,
         SdkHolderInterface $sdkHolder,
         InstanceIpServiceInterface $instanceIpService,
         string $name = null
     ) {
-        parent::__construct($sdkHolder, $name);
+        parent::__construct($container, $sdkHolder, $name);
         $this->instanceIpService = $instanceIpService;
     }
 

@@ -7,6 +7,7 @@ namespace Palmyr\App\Command;
 use Aws\Ec2\Ec2Client;
 use Palmyr\App\Holder\SdkHolderInterface;
 use Palmyr\CommonUtils\IpInfo\Service\IpInfoServiceInterface;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -19,10 +20,11 @@ class UpdateDynamicSecurityGroup extends AbstractAWSCommand
     protected IpInfoServiceInterface $ipInfoService;
 
     public function __construct(
+        ContainerInterface $container,
         SdkHolderInterface $sdkHolder,
         IpInfoServiceInterface $ipInfoService
     ) {
-        parent::__construct($sdkHolder, "security-group:update_dynamic");
+        parent::__construct($container, $sdkHolder, "security-group:update_dynamic");
         $this->ipInfoService = $ipInfoService;
     }
 

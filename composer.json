@@ -10,7 +10,7 @@
     "ext-iconv": "*",
     "aws/aws-sdk-php": "^3.204",
     "palmyr/php-coding-standards": "^1.0",
-    "palmyr/symfony-aws": "dev-master",
+    "palmyr/symfony-aws": "^1.0",
     "palmyr/symfony-commonutils": "^1.0",
     "palmyr/console": "^3.0"
   },
