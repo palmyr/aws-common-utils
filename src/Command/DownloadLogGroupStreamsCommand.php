@@ -6,6 +6,7 @@ use Palmyr\App\Holder\SdkHolderInterface;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -22,7 +23,9 @@ class DownloadLogGroupStreamsCommand extends AbstractAWSCommand
         parent::configure();
         $this
             ->addArgument("log_group_name", InputArgument::REQUIRED, "The name of the log group.")
-            ->addArgument("output", InputArgument::REQUIRED, "The output file.");
+            ->addArgument("output", InputArgument::REQUIRED, "The output file.")
+            ->addOption("start", null, InputOption::VALUE_REQUIRED, "The start time.")
+            ->addOption("end", null, InputOption::VALUE_REQUIRED, "The end time.");
     }
 
 
@@ -38,36 +41,39 @@ class DownloadLogGroupStreamsCommand extends AbstractAWSCommand
 
         $logGroupName = (string)$input->getArgument("log_group_name");
 
-        $logSteamCollection = $client->getIterator("DescribeLogStreams", [
+        $args = [
             "logGroupName" => $logGroupName,
-        ]);
+        ];
 
-        foreach ( $logSteamCollection as $logStream ) {
-            $logStreamName = (string)$logStream["logStreamName"];
-            $logEventCollection = $client->getIterator("GetLogEvents", [
-                "logGroupName" => $logGroupName,
-                "logStreamName" => $logStreamName,
-            ]);
-            foreach ( $logEventCollection as $logEvent ) {
-                $outputString = $this->phaseLog($logEvent);
-                $outputFile->fwrite($outputString . PHP_EOL);
-                $io->comment(sprintf("Downloaded log - %s", $logStreamName));
+        foreach (["start" => "startTime", "end" => "endTime"] as $inputKey => $argKey) {
+            if ( $value = $input->getOption($inputKey) ) {
+                $args[$argKey] = (new \DateTimeImmutable($value))->getTimestamp() * 1000;
             }
         }
+
+        $logSteamCollection = $client->getIterator("FilterLogEvents", $args);
+
+        foreach ( $logSteamCollection as $logStream ) {
+            $outputString = $this->phaseLog($logStream);
+            $outputFile->fwrite($outputString . PHP_EOL);
+            $io->comment($outputString);
+        }
+
+        return self::SUCCESS;
     }
 
     protected function phaseLog(array $log): string
     {
 
         $log = $this->preprocessLog($log);
-        return sprintf("%s - %s", $log["timestamp"], $log["message"]);
+        return sprintf("%s - [%s] %s", $log["logStreamName"], $log["timestamp"], $log["message"]);
     }
 
     protected function preprocessLog(array $log): array
     {
         foreach (["timestamp"] as $key) {
             if ( isset($log[$key]) &&  is_int($log[$key]) ) {
-                $log[$key] = (new \DateTimeImmutable())->setTimestamp($log[$key])->format(\DateTimeInterface::ATOM);
+                $log[$key] = (new \DateTimeImmutable())->setTimestamp((int)($log[$key] / 1000))->format(\DateTimeInterface::ATOM);
             }
         }
 
