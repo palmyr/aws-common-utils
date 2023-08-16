@@ -15,4 +15,4 @@ if (
     exit(1);
 }
 
-Palmyr\App\Application::init();
+Palmyr\App\Application::init(dirname(__DIR__));
