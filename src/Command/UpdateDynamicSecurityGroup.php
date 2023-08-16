@@ -28,7 +28,7 @@ class UpdateDynamicSecurityGroup extends AbstractAWSCommand
         $this->ipInfoService = $ipInfoService;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         $this->setDescription("Use this command to update a security groups ingress rules");

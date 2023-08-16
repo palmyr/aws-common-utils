@@ -26,7 +26,7 @@ abstract class AbstractInstanceIPCommand extends AbstractAWSCommand
         $this->instanceIpService = $instanceIpService;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         $this->addOption("private", "a", InputOption::VALUE_OPTIONAL, "Get the instances private ip.", false);

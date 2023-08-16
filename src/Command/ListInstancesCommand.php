@@ -35,7 +35,7 @@ class ListInstancesCommand extends AbstractAwsCommand
         parent::__construct($container, $sdkHolder, "ec2:list_instances");
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         $this->setDescription("List all instances");

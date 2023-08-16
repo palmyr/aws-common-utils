@@ -9,7 +9,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 abstract class AbstractAWSConfigurationCommand extends Command
 {
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         $this->addOption("profile", "p", InputOption::VALUE_REQUIRED, "The profile to use.", "default");

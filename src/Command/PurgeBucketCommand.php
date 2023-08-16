@@ -24,7 +24,7 @@ class PurgeBucketCommand extends AbstractAWSCommand
         parent::__construct($container, $sdkHolder, "s3:purge_bucket");
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         $this->setDescription("Purge a bucket of all content and delete it.");

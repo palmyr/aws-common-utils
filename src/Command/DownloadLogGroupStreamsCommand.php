@@ -18,7 +18,7 @@ class DownloadLogGroupStreamsCommand extends AbstractAWSCommand
         parent::__construct($container, $sdkHolder, "logs:download_log_group_logs");
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         $this

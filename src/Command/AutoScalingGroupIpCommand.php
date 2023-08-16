@@ -21,7 +21,7 @@ class AutoScalingGroupIpCommand extends AbstractInstanceIPCommand
         parent::__construct($container, $sdkHolder, $instanceIpService, 'ec2:autoscaling_group_ip');
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         $this
