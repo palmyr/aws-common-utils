@@ -75,11 +75,11 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
             return $profile;
         }
 
-        if ( (bool)$input->getOption("force") && $this->sessionIsValid($profile) ) {
-            return $profile;
+        if ( (bool)$input->getOption("force") || !$this->sessionIsValid($profile) ) {
+            return $this->login($mfaProfile, $io);
         }
 
-        return $this->login($mfaProfile, $io);
+        return $profile;
 
     }
 
