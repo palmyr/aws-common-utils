@@ -10,6 +10,7 @@ use Palmyr\SymfonyAws\Factory\SdkFactoryInterface;
 use Palmyr\SymfonyAws\Service\AwsIniFileServiceInterface;
 use Aws\Sts\Exception\StsException;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
@@ -41,7 +42,8 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
     protected function configure(): void
     {
         parent::configure();
-        $this->setDescription("Generate credentials using mfa");
+        $this->setDescription("Generate credentials using mfa.");
+        $this->addOption("force", "f", InputOption::VALUE_NONE, "Should the existing credentials be checked.");
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -58,14 +60,14 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
             return self::INVALID;
         }
 
-        $profile = $this->verifyLogin($mfaProfile, $io);
+        $profile = $this->verifyLogin($mfaProfile, $io, $input);
 
         $io->success(sprintf("Successfully logged in, the token will expire at %s.", $profile->getSessionTokenExpiresAt()->format(\DATE_ATOM)));
 
         return self::SUCCESS;
     }
 
-    protected function verifyLogin(AwsProfileModelInterface $mfaProfile, SymfonyStyle $io): AwsProfileModelInterface
+    protected function verifyLogin(AwsProfileModelInterface $mfaProfile, SymfonyStyle $io, InputInterface $input): AwsProfileModelInterface
     {
         if ( !$profile = $this->iniFileService->loadProfile($mfaProfile->getProfile()) ) {
             $profile = $this->login($mfaProfile, $io);
@@ -73,7 +75,7 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
             return $profile;
         }
 
-        if ( $this->sessionIsValid($profile) ) {
+        if ( (bool)$input->getOption("force") && $this->sessionIsValid($profile) ) {
             return $profile;
         }
 
