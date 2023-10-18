@@ -20,8 +20,6 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
 
     public const AWS_INI_FILENAME_MFA = AwsIniFileServiceInterface::AWS_INI_FILENAME . '_mfa';
 
-    public const SESSION_DURATION = 129600;
-
     protected AwsIniFileServiceInterface $iniFileService;
 
     protected SdkFactoryInterface $sdkFactory;
@@ -104,7 +102,6 @@ class MFALoginCommand extends AbstractAWSConfigurationCommand
                 $result = $stsClient->getSessionToken([
                     "SerialNumber" => $mfaProfile->get("mfa_serial_number"),
                     "TokenCode" => $token,
-                    "DurationSeconds" => self::SESSION_DURATION,
                 ]);
                 $loggedIn = true;
             } catch (StsException $e) {
