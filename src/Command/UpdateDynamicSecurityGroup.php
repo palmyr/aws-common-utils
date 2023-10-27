@@ -11,6 +11,7 @@ use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class UpdateDynamicSecurityGroup extends AbstractAWSCommand
@@ -38,8 +39,9 @@ class UpdateDynamicSecurityGroup extends AbstractAWSCommand
         $this->addOption("ip", null, InputOption::VALUE_REQUIRED, "The ip to allow access");
     }
 
-    protected function runCommand(InputInterface $input, SymfonyStyle $io): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $io = new SymfonyStyle($input, $output);
         $client = $this->getSdk()->createEc2();
 
         $ports = (array)$input->getOption("port");
